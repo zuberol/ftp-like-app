@@ -17,9 +17,9 @@
 
 
 #define SA    struct sockaddr
-#define TCP_PORT 20
-#define UDP_send_port 21	//any na razie ustawione
-#define	SENDRATE	5		/* send one datagram every five seconds */
+#define TCP_LISTEN_PORT 7	// testing
+#define UDP_SEND_PORT 21	// multicast service discovery
+#define	SENDRATE	5		/* send one service discovery datagram every five seconds */
 #define MAXLINE 1024
 #define LISTENQ 2
 
@@ -37,7 +37,7 @@ void send_all(int, SA *, socklen_t);
 #define M_ALARM
 #ifdef M_ALARM
 void sig_alarm(int signo){
-	printf("pid=%ld   ppid=%ld\n", (long)getpid(), (long)getppid());
+	printf("pid=%ld   ppid=%ld	|	sends multicast msg\n", (long)getpid(), (long)getppid());
 	//send
 	send_all(g_sendfd, g_sasend, g_salen);	/* parent -> sends */
 	alarm(5);
@@ -163,7 +163,7 @@ int snd_udp_socket(const char *serv, int port, SA **saptr, socklen_t *lenp){
 /* end send_udp_socket */
 
 void send_all(int sendfd, SA *sadest, socklen_t salen){
-	char		line[MAXLINE];		/* hostname and process ID */
+	char		line[MAXLINE];
 	struct utsname	myname;
 
 	if (uname(&myname) < 0)
@@ -189,10 +189,8 @@ void send_all(int sendfd, SA *sadest, socklen_t salen){
 		fprintf(stderr,"sendto() error : %s\n", strerror(errno));
 }
 
-
-ssize_t						/* Write "n" bytes to a descriptor. */
-writen(int fd, const void *vptr, size_t n)
-{
+/* Write "n" bytes to a descriptor. */
+ssize_t	writen(int fd, const void *vptr, size_t n){
 	size_t		nleft;
 	ssize_t		nwritten;
 	const char	*ptr;
@@ -212,7 +210,7 @@ writen(int fd, const void *vptr, size_t n)
 	}
 	return(n);
 }
-/* end writen */
+/* end writen() */
 
 void Writen(int fd, void *ptr, size_t nbytes){
 	if (writen(fd, ptr, nbytes) != nbytes)
@@ -220,17 +218,44 @@ void Writen(int fd, void *ptr, size_t nbytes){
 }
 
 void str_echo(int sockfd){
-	ssize_t		n;
-	char		buf[MAXLINE];
 
-again:
-	while ( (n = read(sockfd, buf, MAXLINE)) > 0)
-		Writen(sockfd, buf, n);
+	FILE * pFile;
+	long lSize;
+	char * buffer;
+	size_t result;
 
-	if (n < 0 && errno == EINTR)
-		goto again;
-	else if (n < 0)
-		perror("str_echo: read error");
+	pFile = fopen ( "temps.txt" , "r" );
+	if (pFile==NULL) {
+		fputs ("File error",stderr);
+		exit (1);
+	}
+
+	// obtain file size:
+	fseek (pFile , 0 , SEEK_END);
+	lSize = ftell (pFile);
+	rewind (pFile);
+
+	// allocate memory to contain the whole file:
+	buffer = (char*) malloc (sizeof(char)*lSize);
+	if (buffer == NULL) {
+		fputs ("Memory error",stderr);
+		exit (2);
+	}
+
+	// copy the file into the buffer:
+	result = fread (buffer,1,lSize,pFile);
+	if (result != lSize) {
+		fputs ("Reading error",stderr);
+		exit (3);
+	}
+
+	/* send data now */ 
+	Writen(sockfd, buffer, lSize);
+
+	// terminate
+	fclose (pFile);
+	free (buffer);
+
 }
 			
 int main(int argc, char **argv){
@@ -240,7 +265,7 @@ int main(int argc, char **argv){
 		return 1;
 	}
 
-	g_sendfd = snd_udp_socket(argv[1], UDP_send_port, &g_sasend, &g_salen);
+	g_sendfd = snd_udp_socket(argv[1], UDP_SEND_PORT, &g_sasend, &g_salen);
 
     // TCP part
 	int					listenfd, connfd;
@@ -252,8 +277,6 @@ int main(int argc, char **argv){
 	// take care of fired signals
 	signal(SIGCHLD, SIG_IGN);
 	m_signal(SIGALRM, sig_alarm);
-	// sig_end
-
 
 	// socket 
 
@@ -269,7 +292,7 @@ int main(int argc, char **argv){
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin6_family = AF_INET6;
 	servaddr.sin6_addr   = in6addr_any;
-	servaddr.sin6_port   = htons(7);	/* echo server */
+	servaddr.sin6_port   = htons(TCP_LISTEN_PORT);	/* echo server */
 
    if ( bind( listenfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0){
            fprintf(stderr,"bind error : %s\n", strerror(errno));
