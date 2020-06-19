@@ -1,5 +1,19 @@
 # ftp-like-app
 This app allows to upload data across remote machines.
+
+# Co dziala
+- Serwer nadaje co SENDRATE pakiety na multicast z plikami z katalogu roota.
+- Klient odbiera multicast i wyswietla dostepne pliki na serwerze, ktore moze pobrac.
+- Klient i serwer na innym porcie tworza sesje TCP i serwer przesyła 'temps.txt' klientowi (mozliwe, ze trzeba najpierw stworzyc 'temps.txt').
+
+
+
+# Todo
+- Dorobic switcha w kliencie i podpiąć reszte komend, tak jak w którymś z linków jest pokazane.
+- Serwer odpala się na roocie.
+- Format tlv miedzy przesylanymi plikami gdzies trzeba wcisnac. Mozna w multicascie jak serwer rozsyła liste z plikami.
+- Wyczyscic kod i essa zdane, czy cos jeszcze moze dorobic trzeba?
+
 ## Konspekt
 https://docs.google.com/document/d/1Z7IymtaWE6T5qg_rLOqmrj8BJSl6ZnI8_beYwrp4uRU/edit?usp=sharing
 
