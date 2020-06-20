@@ -130,6 +130,7 @@ writen(int fd, const void *vptr, size_t n)
 		nleft -= nwritten;
 		ptr   += nwritten;
 	}
+
 	return(n);
 }
 /* end writen */
@@ -137,6 +138,7 @@ writen(int fd, const void *vptr, size_t n)
 void
 Writen(int fd, void *ptr, size_t nbytes)
 {
+
 	if (writen(fd, ptr, nbytes) != nbytes)
 		perror("writen error");
 }
@@ -302,6 +304,7 @@ void recv_all(int recvfd, socklen_t salen, SA ** saptr)
 
 		printf("Datagram from %s : %s (%d bytes)\n", addr_str, line, n);
 		fflush(stdout);
+
 	//}
 }
 
@@ -448,13 +451,17 @@ void down_change_name(char ** arg){
 
 
 	Writen(sockfd, filename, strlen(filename));
-	Writen(sockfd, newname, strlen(newname));
+
 
 	// buffer for name, scanf
 	// download_data <- success/error msg
+	FILE *file = fopen(newname, "w");
+
+
 
 	while ( (n = read(sockfd, recvline, MAXLINE)) > 0) {
 		recvline[n] = 0;	/* null terminate */
+		fputs(recvline,file);
 		if (fputs(recvline, stdout) == EOF){
 			fprintf(stderr,"fputs error : %s\n", strerror(errno));
 			exit(1);
@@ -464,8 +471,13 @@ void down_change_name(char ** arg){
 	if (n < 0)
 		fprintf(stderr,"read error : %s\n", strerror(errno));
 
+
+
 	fflush(stdout);
-	fprintf(stderr,"\nData downloaded + %s\n",newname);
+	fclose(file);
+
+	fprintf(stderr,"\nData downloaded into %s\n",newname);
+
 }
 
 int
@@ -477,11 +489,12 @@ main(int argc, char **argv){
 
   int choice;
   while(1){
-      printf("Enter a choice:\n1 - get\n2 - change name\n3 - delete\n4 - copy\n5 - quit\n");
+      printf("Enter a choice:\n1 - print file contents\n2 - copy to local file\n3 - delete\n4 - copy\n5 - quit\n");
       scanf("%d", &choice);
+
       switch(choice){
 		  case(1):
-		  	activate_service_discovery(argv);
+				activate_service_discovery(argv);
 				download_data(argv);
 
 		  break;
@@ -492,6 +505,7 @@ main(int argc, char **argv){
 
 			case(3):
 				activate_service_discovery(argv);
+
 			break;
 
 			case(4):
