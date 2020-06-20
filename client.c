@@ -480,6 +480,41 @@ void down_change_name(char ** arg){
 
 }
 
+void remove_file(char ** arg){
+	int					sockfd, n;
+	struct sockaddr_in6	servaddr;
+	char				recvline[MAXLINE + 1];
+	int err;
+	if ( (sockfd = socket(AF_INET6, SOCK_STREAM, 0)) < 0){
+		fprintf(stderr,"socket error : %s\n", strerror(errno));
+		exit(1);
+	}
+
+	bzero(&servaddr, sizeof(servaddr));
+	servaddr.sin6_family = AF_INET6;
+	servaddr.sin6_port   = htons(TCP_SERVER_PORT);	/* daytime server */
+	if ( (err=inet_pton(AF_INET6, arg[2], &servaddr.sin6_addr)) <= 0){
+		fprintf(stderr,"inet_pton error for %s : %s \n", arg[2], strerror(errno));
+		exit(1);
+	}
+	if (connect(sockfd, (SA *) &servaddr, sizeof(servaddr)) < 0){
+		fprintf(stderr,"connect error : %s \n", strerror(errno));
+		exit(1);
+	}
+	char buf[100];
+	char filename[20];
+	printf("Enter filename to delete: ");
+	scanf("%s\n",filename);
+	strcpy(buf, filename);
+	send(sockfd, buf, 100, 0);
+	recv(sockfd, buf, 100, 0);
+
+	fflush(stdout);
+
+	fprintf(stderr,"\n%s deleted from server \n",filename);
+
+}
+
 int
 main(int argc, char **argv){
 	if (argc != 3){
@@ -505,6 +540,7 @@ main(int argc, char **argv){
 
 			case(3):
 				activate_service_discovery(argv);
+				remove_file(argv);
 
 			break;
 
