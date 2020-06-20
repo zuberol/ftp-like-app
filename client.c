@@ -145,7 +145,7 @@ void
 str_cli(FILE *fp, int sockfd)
 {
 	char	sendline[MAXLINE], recvline[MAXLINE];
-	
+
 	printf("Enter text:");
 
 	while (Fgets(sendline, MAXLINE, fp) != NULL) {
@@ -173,7 +173,7 @@ _if_nametoindex(const char *ifname)
 
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-	
+
 	if (ioctl(s, SIOCGIFINDEX, &ifr) != -1) {
 			close(s);
 			return (ifr.ifr_ifindex);
@@ -191,13 +191,13 @@ int snd_udp_socket(const char *serv, int port, SA **saptr, socklen_t *lenp){
 	struct sockaddr_in *pservaddrv4;
 
 	*saptr = malloc( sizeof(struct sockaddr_in6));
-	
+
 	pservaddrv6 = (struct sockaddr_in6*)*saptr;
 
 	bzero(pservaddrv6, sizeof(struct sockaddr_in6));
 
 	if (inet_pton(AF_INET6, serv, &pservaddrv6->sin6_addr) <= 0){
-	
+
 		free(*saptr);
 		*saptr = malloc( sizeof(struct sockaddr_in));
 		pservaddrv4 = (struct sockaddr_in*)*saptr;
@@ -288,7 +288,7 @@ void recv_all(int recvfd, socklen_t salen, SA ** saptr)
 		  perror("recvfrom() error");
 
 		line[n] = 0;	/* null terminate */
-		
+
 		* saptr = safrom; //
 
 		if( safrom->sa_family == AF_INET6 ){
@@ -328,7 +328,7 @@ void activate_service_discovery(char ** a){
 
 	sarecv = malloc(salen);
 	memcpy(sarecv, sasend, salen);
-	
+
 	if(sarecv->sa_family == AF_INET6){
 	  ipv6addr = (struct sockaddr_in6 *) sarecv;
 	  ipv6addr->sin6_addr =  in6addr_any;
@@ -338,17 +338,17 @@ void activate_service_discovery(char ** a){
 	  ipv4addr = (struct sockaddr_in *) sarecv;
 	  ipv4addr->sin_addr.s_addr =  htonl(INADDR_ANY);
 	}
-	
+
 	if( bind(recvfd, sarecv, salen) < 0 ){
 	    fprintf(stderr,"bind error : %s\n", strerror(errno));
 	    exit(1);
 	}
-	
+
 	if( mcast_join(recvfd, sasend, salen, NULL, 0) < 0 ){
 		fprintf(stderr,"mcast_join() error : %s\n", strerror(errno));
 		exit(1);
 	}
-	  
+
 	struct sockaddr		* safrom;
 	recv_all(recvfd, salen, &safrom);	/* child -> receives */
 
@@ -376,7 +376,6 @@ void download_data(char ** arg){
 	struct sockaddr_in6	servaddr;
 	char				recvline[MAXLINE + 1];
 	int err;
-
 	if ( (sockfd = socket(AF_INET6, SOCK_STREAM, 0)) < 0){
 		fprintf(stderr,"socket error : %s\n", strerror(errno));
 		exit(1);
@@ -400,8 +399,6 @@ void download_data(char ** arg){
 
 	Writen(sockfd, filename, strlen(filename));
 
-
-
 	// buffer for name, scanf
 	// download_data <- success/error msg
 
@@ -418,9 +415,58 @@ void download_data(char ** arg){
 
 	fflush(stdout);
 	fprintf(stderr,"\nData downloaded\n");
-
 }
 
+void down_change_name(char ** arg){
+	int					sockfd, n;
+	struct sockaddr_in6	servaddr;
+	char				recvline[MAXLINE + 1];
+	int err;
+	if ( (sockfd = socket(AF_INET6, SOCK_STREAM, 0)) < 0){
+		fprintf(stderr,"socket error : %s\n", strerror(errno));
+		exit(1);
+	}
+
+	bzero(&servaddr, sizeof(servaddr));
+	servaddr.sin6_family = AF_INET6;
+	servaddr.sin6_port   = htons(TCP_SERVER_PORT);	/* daytime server */
+	if ( (err=inet_pton(AF_INET6, arg[2], &servaddr.sin6_addr)) <= 0){
+		fprintf(stderr,"inet_pton error for %s : %s \n", arg[2], strerror(errno));
+		exit(1);
+	}
+	if (connect(sockfd, (SA *) &servaddr, sizeof(servaddr)) < 0){
+		fprintf(stderr,"connect error : %s \n", strerror(errno));
+		exit(1);
+	}
+
+	char filename[20];
+	char newname[20];
+	printf("Enter filename to download: ");
+	scanf("%s", filename);
+	printf("Enter new filename: ");
+	scanf("%s", newname);
+
+
+	Writen(sockfd, filename, strlen(filename));
+	Writen(sockfd, newname, strlen(newname));
+
+	// buffer for name, scanf
+	// download_data <- success/error msg
+
+	while ( (n = read(sockfd, recvline, MAXLINE)) > 0) {
+		recvline[n] = 0;	/* null terminate */
+		if (fputs(recvline, stdout) == EOF){
+			fprintf(stderr,"fputs error : %s\n", strerror(errno));
+			exit(1);
+		}
+	}
+
+	if (n < 0)
+		fprintf(stderr,"read error : %s\n", strerror(errno));
+
+	fflush(stdout);
+	fprintf(stderr,"\nData downloaded + %s\n",newname);
+}
 
 int
 main(int argc, char **argv){
@@ -431,20 +477,35 @@ main(int argc, char **argv){
 
   int choice;
   while(1){
-      printf("Enter a choice:\n1- get\n6- quit\n");
+      printf("Enter a choice:\n1 - get\n2 - change name\n3 - delete\n4 - copy\n5 - quit\n");
       scanf("%d", &choice);
       switch(choice){
 		  case(1):
 		  	activate_service_discovery(argv);
-			download_data(argv);
+				download_data(argv);
 
 		  break;
 
 		  case(2):
+				activate_service_discovery(argv);
+				down_change_name(argv);
 
-		  break;
-	  	}	
+			case(3):
+				activate_service_discovery(argv);
+			break;
+
+			case(4):
+				activate_service_discovery(argv);
+			break;
+				activate_service_discovery(argv);
+			case(5):
+				exit(0);
+
+			break;
+
   }
+exit(0);
 
-	exit(0);
+}
+
 }
