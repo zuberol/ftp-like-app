@@ -224,7 +224,14 @@ void str_echo(int sockfd){
 	char * buffer;
 	size_t result;
 
-	pFile = fopen ( "temps.txt" , "r" );
+	char* filename;
+	char buff[100];
+	recv(g_sendfd, buff, 100, 0);
+	sscanf(buff, "%s", filename);
+
+
+
+	pFile = fopen ( filename , "r" );
 	if (pFile==NULL) {
 		fputs ("File error",stderr);
 		exit (1);
@@ -317,19 +324,7 @@ int main(int argc, char **argv){
 				perror("accept error");
 				exit(1);
 		}
-		int x;
-		scanf("%d",x);
-		if (x==3){
-		char* filename;
-		char buff[100];
-		recv(g_sendfd, buff, 100, 0);
-		sscanf(buff, "%s", filename);
-		char* cmd="rm";
-		char* full_cmd;
-		full_cmd = malloc(strlen(filename)+strlen(cmd));
-		 strcpy(full_cmd, cmd);
-		 strcat(full_cmd, filename);
-		system(full_cmd);
+
 	}
 
 		if ( (childpid = fork()) == 0) {	/* child process */
