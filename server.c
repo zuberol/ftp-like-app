@@ -259,13 +259,13 @@ void str_echo(int sockfd){
 	recv(sockfd,buff,100,0);
 	printf("%s\n", buff);
 
-	if(buff[0]=='r' && buff[1]=='m'){    //stupid chacking for command and executings
+	if(buff[0]=='r' && buff[1]=='m'){    //stupid checking for command and executing
 		system(buff);
 		printf("deleted" );
 	}
 	else if(buff[0]=='c' && buff[1]=='p'){
 		system(buff);
-		printf("deleted");
+		printf("copied");
 	}
 	else{
 
