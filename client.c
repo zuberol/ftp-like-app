@@ -529,6 +529,17 @@ void copy_file(char ** arg){
 	struct sockaddr_in6	servaddr;
 	char				recvline[MAXLINE + 1];
 	int err;
+	char buf[100];
+	char *filename;
+	char *target;
+	printf("Enter filename to copy: ");
+	scanf("%s",filename);
+	printf("Enter target: ");
+	scanf("%s",target);
+	printf("%s\n",filename );
+	char *command="cp ";
+	char *x=" ";
+
 	if ( (sockfd = socket(AF_INET6, SOCK_STREAM, 0)) < 0){
 		fprintf(stderr,"socket error : %s\n", strerror(errno));
 		exit(1);
@@ -545,23 +556,12 @@ void copy_file(char ** arg){
 		fprintf(stderr,"connect error : %s \n", strerror(errno));
 		exit(1);
 	}
-	char buf[100];
-	char *filename;
-	char *target;
-	printf("Enter filename to copy: ");
-	scanf("%s",filename);
-	printf("Enter target: ");
-	scanf("%s",target);
-	printf("%s\n",filename );
-	char *command="cp ";
 
-
-	printf ("%s\n", command);
 	char *final = malloc(strlen(filename) + strlen(command) + strlen(target) + 2); // +1 for the null-terminator
 	 // in real code you would check for errors in malloc here
 	 strcpy(final, command);
 	 strcat(final, filename);
-	 strcat(final, " ");
+	 strcat(final, x);
 	 strcat(final, target);   //putting together command
 	 printf ("%s\n", final);
 
