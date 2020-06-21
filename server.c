@@ -13,7 +13,9 @@
 #include	<netdb.h>
 #include	<sys/utsname.h>
 #include	<linux/un.h>
-#include <dirent.h>				/*	POSIX	*/
+#include <dirent.h>
+
+			/*	POSIX	*/
 
 
 #define SA    struct sockaddr
@@ -188,6 +190,34 @@ void send_all(int sendfd, SA *sadest, socklen_t salen){
 	if(sendto(sendfd, line, strlen(line), 0, sadest, salen) < 0 )
 		fprintf(stderr,"sendto() error : %s\n", strerror(errno));
 }
+ssize_t                         /* Read "n" bytes from a descriptor. */
+ readn(int fd, void *vptr, size_t n)
+ {
+     size_t  nleft;
+     ssize_t nread;
+     char   *ptr;
+
+     ptr = vptr;
+     nleft = n;
+     while (nleft > 0) {
+         if ( (nread = read(fd, ptr, nleft)) < 0) {
+             if (errno == EINTR)
+                 nread = 0;      /* and call read() again */
+             else
+                 return (-1);
+         } else if (nread == 0)
+             break;              /* EOF */
+
+         nleft -= nread;
+         ptr += nread;
+     }
+     return (n - nleft);         /* return >= 0 */
+}
+
+void Readn(int fd, void *ptr, size_t nbytes){
+	if (readn(fd, ptr, nbytes) != nbytes)
+		perror("readb error");
+}
 
 /* Write "n" bytes to a descriptor. */
 ssize_t	writen(int fd, const void *vptr, size_t n){
@@ -226,8 +256,7 @@ void str_echo(int sockfd){
 
 	char* filename;
 	char buff[100];
-	recv(g_sendfd, buff, 100, 0);
-	sscanf(buff, "%s", filename);
+	Readn(sockfd, filename, strlen(filename));
 
 
 
@@ -312,7 +341,6 @@ int main(int argc, char **argv){
            return 1;
    }
 
-
 	alarm(1);
 
 	for ( ; ; ) {
@@ -324,8 +352,6 @@ int main(int argc, char **argv){
 				perror("accept error");
 				exit(1);
 		}
-
-	}
 
 		if ( (childpid = fork()) == 0) {	/* child process */
 			alarm(0);

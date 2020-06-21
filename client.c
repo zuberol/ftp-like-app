@@ -444,14 +444,16 @@ void down_change_name(char ** arg){
 
 	char filename[20];
 	char newname[20];
+	char buf[20];
 	printf("Enter filename to download: ");
 	scanf("%s", filename);
 	printf("Enter new filename: ");
 	scanf("%s", newname);
+		strcpy(buf, filename);
+		printf("%s\n",buf );
 
-
+	//send(sockfd, buf, 20, 0);
 	Writen(sockfd, filename, strlen(filename));
-
 
 	// buffer for name, scanf
 	// download_data <- success/error msg
@@ -537,6 +539,8 @@ main(int argc, char **argv){
 		  case(2):
 				activate_service_discovery(argv);
 				down_change_name(argv);
+
+			break;
 
 			case(3):
 				activate_service_discovery(argv);
