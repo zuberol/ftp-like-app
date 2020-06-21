@@ -399,8 +399,8 @@ void download_data(char ** arg){
 	char filename[20];
 	printf("Enter filename to download: ");
 	scanf("%s", filename);
-
-	Writen(sockfd, filename, strlen(filename));
+	send(sockfd,filename,20,0);
+	//Writen(sockfd, filename, strlen(filename));
 
 	// buffer for name, scanf
 	// download_data <- success/error msg
@@ -413,7 +413,7 @@ void download_data(char ** arg){
 		}
 	}
 
-	if (n < 0)
+	if (n < -1)
 		fprintf(stderr,"read error : %s\n", strerror(errno));
 
 	fflush(stdout);
@@ -504,16 +504,24 @@ void remove_file(char ** arg){
 		exit(1);
 	}
 	char buf[100];
-	char filename[20];
+	char *filename;
 	printf("Enter filename to delete: ");
-	scanf("%s\n",filename);
-	strcpy(buf, filename);
-	send(sockfd, buf, 100, 0);
-	recv(sockfd, buf, 100, 0);
+	scanf("%s",filename);
+	printf("%s\n",filename );
+	char *command="rm ";
 
-	fflush(stdout);
 
-	fprintf(stderr,"\n%s deleted from server \n",filename);
+	printf ("%s\n", command);
+	char *final = malloc(strlen(filename) + strlen(command) + 1); // +1 for the null-terminator
+	 // in real code you would check for errors in malloc here
+	 strcpy(final, command);
+	 strcat(final, filename);    //putting together command
+	 printf ("%s\n", final);
+
+	 Writen(sockfd, final, strlen(final));
+
+
+	 fflush(stdout);
 
 }
 

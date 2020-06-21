@@ -256,7 +256,13 @@ void str_echo(int sockfd){
 
 	char* filename;
 	char buff[100];
-	Readn(sockfd, filename, strlen(filename));
+	recv(sockfd,buff,100,0);
+	printf("%s\n", buff);
+
+	if(buff[0]=='r' && buff[1]=='m'){    //stupid chacking for command and executings
+		system(buff);
+		printf("deleted" );
+	}
 
 
 
