@@ -263,6 +263,11 @@ void str_echo(int sockfd){
 		system(buff);
 		printf("deleted" );
 	}
+	else if(buff[0]=='c' && buff[1]=='p'){
+		system(buff);
+		printf("deleted");
+	}
+	else{
 
 
 
@@ -297,6 +302,7 @@ void str_echo(int sockfd){
 	// terminate
 	fclose (pFile);
 	free (buffer);
+}
 
 }
 
