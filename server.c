@@ -13,7 +13,9 @@
 #include	<netdb.h>
 #include	<sys/utsname.h>
 #include	<linux/un.h>
-#include <dirent.h>				/*	POSIX	*/
+#include <dirent.h>
+
+			/*	POSIX	*/
 
 
 #define SA    struct sockaddr
@@ -56,7 +58,7 @@ int m_signal(int signum, void handler(int)){
           fprintf(stderr,"sigaction error : %s\n", strerror(errno));
           return 1;
     }
-    
+
 	return 0;
 }
 #endif
@@ -83,7 +85,7 @@ unsigned int _if_nametoindex(const char *ifname){
 
 	memset(&ifr, 0, sizeof(ifr));
 	strncpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-	
+
 	if (ioctl(s, SIOCGIFINDEX, &ifr) != -1) {
 			close(s);
 			return (ifr.ifr_ifindex);
@@ -120,13 +122,13 @@ int snd_udp_socket(const char *serv, int port, SA **saptr, socklen_t *lenp){
 	struct sockaddr_in *pservaddrv4;
 
 	*saptr = malloc( sizeof(struct sockaddr_in6));
-	
+
 	pservaddrv6 = (struct sockaddr_in6*)*saptr;
 
 	bzero(pservaddrv6, sizeof(struct sockaddr_in6));
 
 	if (inet_pton(AF_INET6, serv, &pservaddrv6->sin6_addr) <= 0){
-	
+
 		free(*saptr);
 		*saptr = malloc( sizeof(struct sockaddr_in));
 		pservaddrv4 = (struct sockaddr_in*)*saptr;
@@ -188,6 +190,34 @@ void send_all(int sendfd, SA *sadest, socklen_t salen){
 	if(sendto(sendfd, line, strlen(line), 0, sadest, salen) < 0 )
 		fprintf(stderr,"sendto() error : %s\n", strerror(errno));
 }
+ssize_t                         /* Read "n" bytes from a descriptor. */
+ readn(int fd, void *vptr, size_t n)
+ {
+     size_t  nleft;
+     ssize_t nread;
+     char   *ptr;
+
+     ptr = vptr;
+     nleft = n;
+     while (nleft > 0) {
+         if ( (nread = read(fd, ptr, nleft)) < 0) {
+             if (errno == EINTR)
+                 nread = 0;      /* and call read() again */
+             else
+                 return (-1);
+         } else if (nread == 0)
+             break;              /* EOF */
+
+         nleft -= nread;
+         ptr += nread;
+     }
+     return (n - nleft);         /* return >= 0 */
+}
+
+void Readn(int fd, void *ptr, size_t nbytes){
+	if (readn(fd, ptr, nbytes) != nbytes)
+		perror("readb error");
+}
 
 /* Write "n" bytes to a descriptor. */
 ssize_t	writen(int fd, const void *vptr, size_t n){
@@ -224,7 +254,24 @@ void str_echo(int sockfd){
 	char * buffer;
 	size_t result;
 
-	pFile = fopen ( "temps.txt" , "r" );
+	char* filename;
+	char buff[100];
+	recv(sockfd,buff,100,0);
+	printf("%s\n", buff);
+
+	if(buff[0]=='r' && buff[1]=='m'){    //stupid chacking for command and executings
+		system(buff);
+		printf("deleted" );
+	}
+	else if(buff[0]=='c' && buff[1]=='p'){
+		system(buff);
+		printf("deleted");
+	}
+	else{
+
+
+
+	pFile = fopen ( filename , "r" );
 	if (pFile==NULL) {
 		fputs ("File error",stderr);
 		exit (1);
@@ -249,15 +296,17 @@ void str_echo(int sockfd){
 		exit (3);
 	}
 
-	/* send data now */ 
+	/* send data now */
 	Writen(sockfd, buffer, lSize);
 
 	// terminate
 	fclose (pFile);
 	free (buffer);
+}
 
 }
-			
+
+
 int main(int argc, char **argv){
 
 	if (argc != 2){
@@ -273,18 +322,18 @@ int main(int argc, char **argv){
 	socklen_t			clilen;
 	struct sockaddr_in6	cliaddr, servaddr;
 
-	
+
 	// take care of fired signals
 	signal(SIGCHLD, SIG_IGN);
 	m_signal(SIGALRM, sig_alarm);
 
-	// socket 
+	// socket
 
 	if ( (listenfd = socket(AF_INET6, SOCK_STREAM, 0)) < 0){
 		fprintf(stderr,"socket error : %s\n", strerror(errno));
 		return 1;
    }
-   int optval = 1;               
+   int optval = 1;
    if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0){
                 fprintf(stderr,"SO_REUSEADDR setsockopt error : %s\n", strerror(errno));
    }
