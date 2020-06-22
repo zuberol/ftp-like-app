@@ -255,9 +255,12 @@ void str_echo(int sockfd){
 	size_t result;
 
 	char* filename;
-	char buff[100];
-	recv(sockfd,buff,100,0);
-	printf("%s\n", buff);
+	char buff[1024];
+	memset(&buff, 0, sizeof(buff));
+	if (recv(sockfd, buff, sizeof(buff), 0) == -1){
+			perror("Not received");
+	}
+
 
 	if(buff[0]=='r' && buff[1]=='m'){    //stupid chacking for command and executings
 		system(buff);
