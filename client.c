@@ -373,9 +373,11 @@ void activate_service_discovery(char ** a){
 	// printf("Addr %s\n", addr_str);
 	// fflush(stdout);
 }
+void conn_init(char ** arg){
 
+}
 void download_data(char ** arg){
-	int					sockfd, n;
+	int					sockfd, n;								//tu by sie przydala osobna funcja bo to się wywołuje
 	struct sockaddr_in6	servaddr;
 	char				recvline[MAXLINE + 1];
 	int err;
@@ -396,10 +398,14 @@ void download_data(char ** arg){
 		exit(1);
 	}
 
-	char filename[20];
+	char buf[1024];
+	memset(&buf, 0, sizeof(buf));
+	char filename[1024];
 	printf("Enter filename to download: ");
 	scanf("%s", filename);
-	send(sockfd,filename,20,0);
+	strncpy(buf, filename,sizeof(filename));
+	if (send(sockfd, buf, sizeof(buf), 0) == -1)
+		perror("send failed");
 	//Writen(sockfd, filename, strlen(filename));
 
 	// buffer for name, scanf
@@ -430,6 +436,7 @@ void down_change_name(char ** arg){
 		exit(1);
 	}
 
+
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin6_family = AF_INET6;
 	servaddr.sin6_port   = htons(TCP_SERVER_PORT);	/* daytime server */
@@ -441,19 +448,20 @@ void down_change_name(char ** arg){
 		fprintf(stderr,"connect error : %s \n", strerror(errno));
 		exit(1);
 	}
-
-	char filename[20];
-	char newname[20];
-	char buf[20];
+	char buf[1024];
+	memset(&buf, 0, sizeof(buf));
+	char *filename;
+	char *newname;
 	printf("Enter filename to download: ");
 	scanf("%s", filename);
 	printf("Enter new filename: ");
 	scanf("%s", newname);
-		strcpy(buf, filename);
-		printf("%s\n",buf );
+		strncpy(buf, filename,sizeof(filename));
+
 
 	//send(sockfd, buf, 20, 0);
-	Writen(sockfd, filename, strlen(filename));
+	if (send(sockfd, buf, sizeof(buf), 0) == -1)
+		perror("send failed");
 
 	// buffer for name, scanf
 	// download_data <- success/error msg
@@ -487,11 +495,11 @@ void remove_file(char ** arg){
 	struct sockaddr_in6	servaddr;
 	char				recvline[MAXLINE + 1];
 	int err;
+
 	if ( (sockfd = socket(AF_INET6, SOCK_STREAM, 0)) < 0){
 		fprintf(stderr,"socket error : %s\n", strerror(errno));
 		exit(1);
 	}
-
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin6_family = AF_INET6;
 	servaddr.sin6_port   = htons(TCP_SERVER_PORT);	/* daytime server */
@@ -503,22 +511,28 @@ void remove_file(char ** arg){
 		fprintf(stderr,"connect error : %s \n", strerror(errno));
 		exit(1);
 	}
-	char buf[100];
+	char buf[1024];
+	memset(&buf, 0, sizeof(buf));
 	char *filename;
 	printf("Enter filename to delete: ");
 	scanf("%s",filename);
 	printf("%s\n",filename );
 	char *command="rm ";
 
-
-	printf ("%s\n", command);
-	char *final = malloc(strlen(filename) + strlen(command) + 1); // +1 for the null-terminator
+	char *final = malloc(strlen(filename) + strlen(command) + 1);
+	if (final == NULL) {
+	fprintf(stderr, "failed to allocate memory.\n");
+} // +1 for the null-terminator
 	 // in real code you would check for errors in malloc here
 	 strcpy(final, command);
-	 strcat(final, filename);    //putting together command
-	 printf ("%s\n", final);
+	 strcat(final, filename);
+	 strncpy(buf, final, sizeof(final));
+//putting tmogether command
 
-	 Writen(sockfd, final, strlen(final));
+
+	 //Writen(sockfd, final, strlen(final));
+	 if (send(sockfd, buf, sizeof(buf), 0) == -1)
+		 perror("send failed");
 
 
 	 fflush(stdout);
@@ -529,16 +543,8 @@ void copy_file(char ** arg){
 	struct sockaddr_in6	servaddr;
 	char				recvline[MAXLINE + 1];
 	int err;
-	char buf[100];
-	char *filename;
-	char *target;
-	printf("Enter filename to copy: ");
-	scanf("%s",filename);
-	printf("Enter target: ");
-	scanf("%s",target);
-	printf("%s\n",filename );
-	char *command="cp ";
-	char *x=" ";
+
+
 
 	if ( (sockfd = socket(AF_INET6, SOCK_STREAM, 0)) < 0){
 		fprintf(stderr,"socket error : %s\n", strerror(errno));
@@ -557,15 +563,34 @@ void copy_file(char ** arg){
 		exit(1);
 	}
 
-	char *final = malloc(strlen(filename) + strlen(command) + strlen(target) + 2); // +1 for the null-terminator
-	 // in real code you would check for errors in malloc here
-	 strcpy(final, command);
-	 strcat(final, filename);
-	 strcat(final, x);
-	 strcat(final, target);   //putting together command
-	 printf ("%s\n", final);
+	char buf[1024];
+	memset(&buf, 0, sizeof(buf));
+	char *filename;
+	char *target;
+	printf("Enter filename to copy: ");
+	scanf("%s",filename);
+	printf("Enter target: ");
+	scanf("%s",target);
 
-	 Writen(sockfd, final, strlen(final));
+	char *command="cp ";
+	char *x=" ";
+
+		char *final = malloc(strlen(filename) + strlen(command) + strlen(target) + 2);
+		if (final == NULL) {
+		fprintf(stderr, "failed to allocate memory.\n");
+}// +1 for the null-terminator
+		 // in real code you would check for errors in malloc here
+		 strcpy(final, command);
+		 strcat(final, filename);
+		 strcat(final, x);
+		 strcat(final, target);   //putting together command
+
+	strncpy(buf,final,sizeof(buf));
+	//if (Writen(sockfd, final, strlen(final) == -1)
+		//	perror("Write failed");
+	if (send(sockfd, buf, sizeof(buf), 0) == -1)
+		perror("send failed");
+
 
 
 	 fflush(stdout);

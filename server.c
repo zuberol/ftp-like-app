@@ -255,17 +255,26 @@ void str_echo(int sockfd){
 	size_t result;
 
 	char* filename;
-	char buff[100];
-	recv(sockfd,buff,100,0);
-	printf("%s\n", buff);
-
-	if(buff[0]=='r' && buff[1]=='m'){    //stupid checking for command and executing
-		system(buff);
-		printf("deleted" );
+	char buff[1024];
+	memset(&buff, 0, sizeof(buff));
+	if (recv(sockfd, buff, sizeof(buff), 0) == -1){
+			perror("Not received");
 	}
-	else if(buff[0]=='c' && buff[1]=='p'){
-		system(buff);
-		printf("copied");
+
+
+
+	if(buff[0]=='r' && buff[1]=='m' && buff[2]==' '){    //stupid chacking for command and executings
+		if(system(buff)!=-1);
+
+		printf("deleted" );
+
+	}
+
+	else if(buff[0]=='c' && buff[1]=='p' && buff[2]==' '){
+		if(system(buff)!=-1){
+		printf("deleted");
+
+	}
 	}
 	else{
 
@@ -274,6 +283,10 @@ void str_echo(int sockfd){
 	pFile = fopen ( buff , "r" );
 	if (pFile==NULL) {
 		fputs ("File error",stderr);
+		char *err="no such file";
+		if (send(sockfd, err, sizeof(err), 0) == -1){
+				perror("Not received");
+		}
 		exit (1);
 	}
 
