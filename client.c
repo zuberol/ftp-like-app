@@ -52,40 +52,7 @@ again:
 	return(1);
 }
 
-ssize_t
-readline(int fd, void *vptr, size_t maxlen)
-{
-	ssize_t	n, rc;
-	char	c, *ptr;
 
-	ptr = vptr;
-	for (n = 1; n < maxlen; n++) {
-		if ( (rc = my_read(fd, &c)) == 1) {
-			*ptr++ = c;
-			//if (c == '\n')
-			//	break;	/* newline is stored, like fgets() */
-		} else if (rc == 0) {
-			*ptr = 0;
-			return(n - 1);	/* EOF, n - 1 bytes were read */
-		} else
-			return(-1);		/* error, errno set by read() */
-	}
-
-	*ptr = 0;	/* null terminate like fgets() */
-	return(n);
-}
-
-/* end readline */
-
-ssize_t
-Readline(int fd, void *ptr, size_t maxlen)
-{
-	ssize_t		n;
-
-	if ( (n = readline(fd, ptr, maxlen)) < 0)
-		perror("readline error");
-	return(n);
-}
 
 
 
@@ -143,26 +110,6 @@ Writen(int fd, void *ptr, size_t nbytes)
 		perror("writen error");
 }
 
-void
-str_cli(FILE *fp, int sockfd)
-{
-	char	sendline[MAXLINE], recvline[MAXLINE];
-
-	printf("Enter text:");
-
-	while (Fgets(sendline, MAXLINE, fp) != NULL) {
-
-		Writen(sockfd, sendline, sizeof(sendline));
-
-		if (Readline(sockfd, recvline, MAXLINE) == 0){
-			perror("str_cli: server terminated prematurely");
-			exit(0);
-		}
-		Fputs(recvline, stdout);
-		printf("Enter text:");
-	}
-}
-
 unsigned int
 _if_nametoindex(const char *ifname)
 {
@@ -184,7 +131,6 @@ _if_nametoindex(const char *ifname)
 		return -1;
 	}
 }
-
 
 
 int snd_udp_socket(const char *serv, int port, SA **saptr, socklen_t *lenp){
@@ -373,9 +319,7 @@ void activate_service_discovery(char ** a){
 	// printf("Addr %s\n", addr_str);
 	// fflush(stdout);
 }
-void conn_init(char ** arg){
 
-}
 void download_data(char ** arg){
 	int					sockfd, n;								//tu by sie przydala osobna funcja bo to się wywołuje
 	struct sockaddr_in6	servaddr;

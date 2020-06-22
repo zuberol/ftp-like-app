@@ -190,34 +190,6 @@ void send_all(int sendfd, SA *sadest, socklen_t salen){
 	if(sendto(sendfd, line, strlen(line), 0, sadest, salen) < 0 )
 		fprintf(stderr,"sendto() error : %s\n", strerror(errno));
 }
-ssize_t                         /* Read "n" bytes from a descriptor. */
- readn(int fd, void *vptr, size_t n)
- {
-     size_t  nleft;
-     ssize_t nread;
-     char   *ptr;
-
-     ptr = vptr;
-     nleft = n;
-     while (nleft > 0) {
-         if ( (nread = read(fd, ptr, nleft)) < 0) {
-             if (errno == EINTR)
-                 nread = 0;      /* and call read() again */
-             else
-                 return (-1);
-         } else if (nread == 0)
-             break;              /* EOF */
-
-         nleft -= nread;
-         ptr += nread;
-     }
-     return (n - nleft);         /* return >= 0 */
-}
-
-void Readn(int fd, void *ptr, size_t nbytes){
-	if (readn(fd, ptr, nbytes) != nbytes)
-		perror("readb error");
-}
 
 /* Write "n" bytes to a descriptor. */
 ssize_t	writen(int fd, const void *vptr, size_t n){
@@ -264,14 +236,14 @@ void str_echo(int sockfd){
 
 
 	if(buff[0]=='r' && buff[1]=='m' && buff[2]==' '){    //stupid chacking for command and executings
-		if(system(buff)!<=0);
+		if(system(buff)<=0);
 
 		printf("deleted" );
 
 	}
 
 	else if(buff[0]=='c' && buff[1]=='p' && buff[2]==' '){
-		if(system(buff)!<=0){
+		if(system(buff)<=0){
 		printf("deleted");
 
 	}
