@@ -232,6 +232,7 @@ void str_echo(int sockfd){
 	if (recv(sockfd, buff, sizeof(buff), 0) == -1){
 			perror("Not received");
 	}
+	
 
 
 

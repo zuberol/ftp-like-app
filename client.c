@@ -361,13 +361,15 @@ void download_data(char ** arg){
 			fprintf(stderr,"fputs error : %s\n", strerror(errno));
 			exit(1);
 		}
+		else{}
 	}
 
-	if (n < -1)
+	if (n < -1){
 		fprintf(stderr,"read error : %s\n", strerror(errno));
 
 	fflush(stdout);
 	fprintf(stderr,"\nData downloaded\n");
+}
 }
 
 void down_change_name(char ** arg){
