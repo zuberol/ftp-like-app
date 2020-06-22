@@ -262,13 +262,15 @@ void str_echo(int sockfd){
 	}
 
 
-	if(buff[0]=='r' && buff[1]=='m'){    //stupid chacking for command and executings
-		system(buff);
+	if(buff[0]=='r' && buff[1]=='m' && buff[2]==' '){    //stupid chacking for command and executings
+		if(system(buff)!=-1);
 		printf("deleted" );
+
 	}
-	else if(buff[0]=='c' && buff[1]=='p'){
-		system(buff);
+	else if(buff[0]=='c' && buff[1]=='p' && buff[2]==' '){
+		if(system(buff)!=-1){
 		printf("deleted");
+	}
 	}
 	else{
 
@@ -277,6 +279,10 @@ void str_echo(int sockfd){
 	pFile = fopen ( filename , "r" );
 	if (pFile==NULL) {
 		fputs ("File error",stderr);
+		char *err="no such file";
+		if (send(sockfd, err, sizeof(err), 0) == -1){
+				perror("Not received");
+		}
 		exit (1);
 	}
 
