@@ -264,14 +264,14 @@ void str_echo(int sockfd){
 
 
 	if(buff[0]=='r' && buff[1]=='m' && buff[2]==' '){    //stupid chacking for command and executings
-		if(system(buff)!=-1);
+		if(system(buff)!<=0);
 
 		printf("deleted" );
 
 	}
 
 	else if(buff[0]=='c' && buff[1]=='p' && buff[2]==' '){
-		if(system(buff)!=-1){
+		if(system(buff)!<=0){
 		printf("deleted");
 
 	}
