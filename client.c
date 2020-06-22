@@ -442,21 +442,6 @@ void remove_file(char ** arg){
 	char				recvline[MAXLINE + 1];
 	int err;
 
-	if ( (sockfd = socket(AF_INET6, SOCK_STREAM, 0)) < 0){
-		fprintf(stderr,"socket error : %s\n", strerror(errno));
-		exit(1);
-	}
-	bzero(&servaddr, sizeof(servaddr));
-	servaddr.sin6_family = AF_INET6;
-	servaddr.sin6_port   = htons(TCP_SERVER_PORT);	/* daytime server */
-	if ( (err=inet_pton(AF_INET6, arg[2], &servaddr.sin6_addr)) <= 0){
-		fprintf(stderr,"inet_pton error for %s : %s \n", arg[2], strerror(errno));
-		exit(1);
-	}
-	if (connect(sockfd, (SA *) &servaddr, sizeof(servaddr)) < 0){
-		fprintf(stderr,"connect error : %s \n", strerror(errno));
-		exit(1);
-	}
 	char buf[1024];
 	memset(&buf, 0, sizeof(buf));
 	char *filename;
@@ -474,6 +459,24 @@ void remove_file(char ** arg){
 	 strcat(final, filename);
 	 strncpy(buf, final, sizeof(final));
 //putting tmogether command
+printf("%s",buf);
+
+	if ( (sockfd = socket(AF_INET6, SOCK_STREAM, 0)) < 0){
+		fprintf(stderr,"socket error : %s\n", strerror(errno));
+		exit(1);
+	}
+	bzero(&servaddr, sizeof(servaddr));
+	servaddr.sin6_family = AF_INET6;
+	servaddr.sin6_port   = htons(TCP_SERVER_PORT);	/* daytime server */
+	if ( (err=inet_pton(AF_INET6, arg[2], &servaddr.sin6_addr)) <= 0){
+		fprintf(stderr,"inet_pton error for %s : %s \n", arg[2], strerror(errno));
+		exit(1);
+	}
+	if (connect(sockfd, (SA *) &servaddr, sizeof(servaddr)) < 0){
+		fprintf(stderr,"connect error : %s \n", strerror(errno));
+		exit(1);
+	}
+
 
 
 	 //Writen(sockfd, final, strlen(final));
@@ -489,6 +492,31 @@ void copy_file(char ** arg){
 	struct sockaddr_in6	servaddr;
 	char				recvline[MAXLINE + 1];
 	int err;
+
+		char buf[1024];
+		memset(&buf, 0, sizeof(buf));
+		char *filename;
+		char *target;
+		printf("Enter filename to copy: ");
+		scanf("%s",filename);
+		printf("Enter target: ");
+		scanf("%s",target);
+
+		char *command="cp ";
+		char *x=" ";
+
+			char *final = malloc(strlen(command) + strlen(filename) + strlen(target) + 2);
+			if (final == NULL) {
+			fprintf(stderr, "failed to allocate memory.\n");
+	}// +1 for the null-terminator
+			 // in real code you would check for errors in malloc here
+			 strcpy(final, command);
+			 strcat(final, filename);
+			 strcat(final, x);
+			 strcat(final, target);   //putting together command
+			 printf("%s",final);
+				strncpy(buf,final,sizeof(buf));
+
 
 
 
@@ -509,32 +537,9 @@ void copy_file(char ** arg){
 		exit(1);
 	}
 
-	char buf[1024];
-	memset(&buf, 0, sizeof(buf));
-	char *filename;
-	char *target;
-	printf("Enter filename to copy: ");
-	scanf("%s",filename);
-	printf("Enter target: ");
-	scanf("%s",target);
-
-	char *command="cp ";
-	char *x=" ";
-
-		char *final = malloc(strlen(filename) + strlen(command) + strlen(target) + 2);
-		if (final == NULL) {
-		fprintf(stderr, "failed to allocate memory.\n");
-}// +1 for the null-terminator
-		 // in real code you would check for errors in malloc here
-		 strcpy(final, command);
-		 strcat(final, filename);
-		 strcat(final, x);
-		 strcat(final, target);   //putting together command
-
-	strncpy(buf,final,sizeof(buf));
 	//if (Writen(sockfd, final, strlen(final) == -1)
 		//	perror("Write failed");
-	if (send(sockfd, buf, sizeof(buf), 0) == -1)
+	if (send(sockfd, final, sizeof(final), 0) == -1)
 		perror("send failed");
 
 
