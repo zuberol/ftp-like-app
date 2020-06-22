@@ -472,7 +472,7 @@ void down_change_name(char ** arg){
 	while ( (n = read(sockfd, recvline, MAXLINE)) > 0) {
 		recvline[n] = 0;	/* null terminate */
 		fputs(recvline,file);
-		if (fputs(recvline, stdout) == EOF){
+		if (fputs(recvline, file) == EOF){
 			fprintf(stderr,"fputs error : %s\n", strerror(errno));
 			exit(1);
 		}
