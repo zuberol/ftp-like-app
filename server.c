@@ -276,7 +276,7 @@ void str_echo(int sockfd){
 
 
 
-	pFile = fopen ( filename , "r" );
+	pFile = fopen ( buff , "r" );
 	if (pFile==NULL) {
 		fputs ("File error",stderr);
 		char *err="no such file";
